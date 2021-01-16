@@ -1,0 +1,71 @@
+#													    [Off]   Byte: 0000 0000
+# No Adress do Display cabe 1 Byte = 8 bits (2^7=128 | 2^6=64 | 2^5=32 | 2^4=16 | 2^3=8 | 2^2=4 | 2^1=2 | 2^0=1) -> 0 0 0 0 0 0 0 0
+#													   Local:   7 6 5 4 3 2 1 0
+#					     Nota: Todos os segmentos ativados [On] -> Byte: 1111 1111
+#	 _		   _0	
+#	|_|		5| _6 |1
+#	|_|.		4| _ |2   .7
+#			   3
+#
+#	bit 0 -> segmento a | bit 1 -> segmento b | bit 2 -> segmento c | bit 3 -> segmento d 
+#	bit 4 -> segmento e | bit 5 -> segmento f | bit 6 -> segmento g | bit 7 -> ponto
+#
+#	Decimal		HEX	 Nº Segmento(7654 3210)	  Display - Binário (0000 0000)	 Display - Decimal	Display - Hexadecimal
+#	0		0x00		--54 3210		0011 1111			063			0x3F
+#	1		0x01		---- -21-		0000 0110			006			0x06
+#	2		0x02		-6-4 3-10		0101 1011			091			0x5B
+#	3		0x03		-6-- 3210		0100 1111			079			0x4F
+#	4		0x04		-65- -21-		0110 0110			102			0x66
+#	5		0x05		-65- 32-0		0110 1101			109			0x6D
+#	6		0x06		-654 32-0		0111 1101			125			0x7D
+#	7		0x07		---- -210		0000 0111			007			0x07
+#	8		0x08		-654 3210		0111 1111			127			0x7F
+#	9		0x09		-65- 3210		0110 1111			111			0x6F
+
+
+.data
+
+ListaDigitos: .word 63, 6, 91, 79, 102, 109, 125, 7, 127, 111
+
+
+.text
+
+.globl main
+
+main:
+	li $s0, 0xFFFF0010			# Endereço da Memoria para acesso ao display da direita (de 7 segmentos)
+	li $s1, 0xFFFF0011			# Endereço da Memoria para acesso ao display da esquerda (de 7 segmentos)
+	li $s2, 10				# Max Elemento da Lista de Digitos
+	li $t1, 0				# Counter 1  (Display Direita)
+	li $t3, 0 				# Contador 2 (Display Esquerda)
+	li $t0, 0				# Valor do Adress
+	li $t2, 0				# Adress Modificada da Lista - Direita
+	li $t4, 0				# Adress Modificada da Lista - Esquerda
+		
+	la $s3, ListaDigitos			# Geral - Adress da Lista
+	move $t2, $s3				# Copia para registo temp. [Direita] - Adress da Lista
+	move $t4, $s3				# Copia para registo temp. [Esquerda] - Adress da Lista
+	
+	
+	CicloDigitosEsquerda:
+		lb $t0, ($t4)
+		sb $t0, ($s1)
+					
+		CicloDigitosDireita:
+			lb $t0, ($t2)
+			sb $t0, ($s0)
+	
+			add $t2, $t2, 4
+			add $t1, $t1, 1
+			blt $t1, $s2, CicloDigitosDireita
+			
+			
+		li $t1, 0			# Reset - Counter 1  (Display Direita)
+		move $t2, $s3			# Reset - Copia para registo temp. [Direita] - Adress da Lista
+			
+		add $t4, $t4, 4
+		add $t3, $t3, 1
+		blt $t3, $s2, CicloDigitosEsquerda
+			
+		
+	
